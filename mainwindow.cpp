@@ -5,15 +5,13 @@
 //
 // Creator:  Professor Corey McBride for MEEN 570 - Brigham Young University
 //
-// Creation Date: 11/22/16
+// Creation Date: 11/8/2018
 //
 // Owner: Corey McBride
 //-------------------------------------------------------
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <vtkCamera.h>
-
-
 
 #include <vtkVersion.h>
 #include <vtkSmartPointer.h>
@@ -33,31 +31,36 @@
 #include <vtkContourFilter.h>
 #include <vtkXMLImageDataWriter.h>
 #include <vtkNamedColors.h>
-
-
-
-
+#include <QVTKOpenGLWidget.h>
+#include <vtkImageData.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    mQVtkWidget= new QVTKOpenGLWidget(this);
 
-    vtkwidget= new QVTKWidget(this);
     QGridLayout* layout = new QGridLayout(ui->frame);
-    layout->addWidget(vtkwidget,1,1);
+    layout->addWidget(mQVtkWidget,1,1);
     ui->frame->setLayout(layout);
 
-    mRenderer =
-            vtkSmartPointer<vtkRenderer>::New();
-    this->vtkwidget->GetRenderWindow()->AddRenderer(mRenderer);
-
-    QTimer::singleShot(200, this, SLOT(setup()));
-
+    vtkNew<vtkGenericOpenGLRenderWindow> window;
+    mQVtkWidget->SetRenderWindow(window);
+    window->AddRenderer(mRenderer);
+    setup();
 }
 
-void MainWindow::CreateData(vtkImageData* data)
+void MainWindow::save_data_to_file(vtkImageData* data)
+{
+    vtkNew<vtkXMLImageDataWriter> writer;
+    writer->SetFileName("data.vti");
+    writer->SetInputData(data);
+    writer->Write();
+}
+
+void MainWindow::create_data(vtkImageData* data)
 {
     data->SetExtent(-25,25,-25,25,0,0);
 
@@ -74,55 +77,37 @@ void MainWindow::CreateData(vtkImageData* data)
         }
     }
 
-    vtkSmartPointer<vtkXMLImageDataWriter> writer =
-            vtkSmartPointer<vtkXMLImageDataWriter>::New();
-    writer->SetFileName("data.vti");
-
-    writer->SetInputData(data);
-
-    writer->Write();
+    // save_data_to_file(data);
 }
 void MainWindow::setup()
 {
-    vtkSmartPointer<vtkNamedColors> colors =
-            vtkSmartPointer<vtkNamedColors>::New();
+    vtkNew<vtkNamedColors> colors;
 
-
-    vtkSmartPointer<vtkImageData> data =
-            vtkSmartPointer<vtkImageData>::New();
-    CreateData(data);
+    vtkNew<vtkImageData> data;
+    create_data(data);
 
     // Create an isosurface
-    mContourFilter =
-            vtkSmartPointer<vtkContourFilter>::New();
-
     mContourFilter->SetInputData(data);
-
     mContourFilter->GenerateValues(1, 10, 10); // (numContours, rangeStart, rangeEnd)
 
 
     // Map the contours to graphical primitives
-    vtkSmartPointer<vtkPolyDataMapper> contourMapper =
-            vtkSmartPointer<vtkPolyDataMapper>::New();
+    vtkNew<vtkPolyDataMapper> contourMapper;
     contourMapper->SetInputConnection(mContourFilter->GetOutputPort());
 
     // Create an actor for the contours
-    vtkSmartPointer<vtkActor> contourActor =
-            vtkSmartPointer<vtkActor>::New();
+    vtkNew<vtkActor> contourActor;
     contourActor->SetMapper(contourMapper);
     contourActor->GetProperty()->SetLineWidth(5);
 
     // Create the outline
-    vtkSmartPointer<vtkOutlineFilter> outlineFilter =
-            vtkSmartPointer<vtkOutlineFilter>::New();
+    vtkNew<vtkOutlineFilter> outlineFilter;
 
     outlineFilter->SetInputData(data);
 
-    vtkSmartPointer<vtkPolyDataMapper> outlineMapper =
-            vtkSmartPointer<vtkPolyDataMapper>::New();
+    vtkNew<vtkPolyDataMapper> outlineMapper;
     outlineMapper->SetInputConnection(outlineFilter->GetOutputPort());
-    vtkSmartPointer<vtkActor> outlineActor =
-            vtkSmartPointer<vtkActor>::New();
+    vtkNew<vtkActor> outlineActor;
     outlineActor->SetMapper(outlineMapper);
     outlineActor->GetProperty()->SetColor(colors->GetColor3d("Gray").GetData());
     outlineActor->GetProperty()->SetLineWidth(3);
@@ -134,9 +119,7 @@ void MainWindow::setup()
     mRenderer->SetBackground2(0,0,0);
 
     mRenderer->ResetCamera();
-
-    this->vtkwidget->update();
-
+    this->mQVtkWidget->GetRenderWindow()->Render();
 }
 
 MainWindow::~MainWindow()
@@ -147,7 +130,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_contourSlider_valueChanged(int value)
 {
     mContourFilter->GenerateValues(1, value, value);
-    this->vtkwidget->update();
+    this->mQVtkWidget->GetRenderWindow()->Render();
 }
 
 

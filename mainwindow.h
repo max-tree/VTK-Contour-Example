@@ -5,7 +5,7 @@
 //
 // Creator:  Professor Corey McBride for MEEN 570 - Brigham Young University
 //
-// Creation Date: 11/22/16
+// Creation Date: 11/8/2018
 //
 // Owner: Corey McBride
 //-------------------------------------------------------
@@ -14,9 +14,10 @@
 
 #include <QMainWindow>
 #include <QtCore>
-#include "QVTKWidget.h"
+#include <QVTKOpenGLWidget.h>
 #include <vtkSmartPointer.h>
 #include <vtkContourFilter.h>
+#include <vtkImageData.h>
 
 namespace Ui {
 class MainWindow;
@@ -24,30 +25,27 @@ class MainWindow;
 
 class MainWindow : public QMainWindow
 {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  explicit MainWindow(QWidget *parent = 0);
-  ~MainWindow();
+    explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
+
+    void save_data_to_file(vtkImageData* data);
 
 protected slots:
-        void setup();
-        void on_contourSlider_valueChanged(int);
+    void setup();
+    void on_contourSlider_valueChanged(int);
 
 protected:
-    void CreateData(vtkImageData *data);
-
+    void create_data(vtkImageData *data);
 
 private:
-  Ui::MainWindow *ui;
-  QVTKWidget* vtkwidget;
+    Ui::MainWindow *ui;
+    QVTKOpenGLWidget* mQVtkWidget;
 
-  vtkSmartPointer<vtkContourFilter> mContourFilter;
-  vtkSmartPointer<vtkRenderer> mRenderer;
-
-
-
-
+    vtkNew<vtkContourFilter> mContourFilter;
+    vtkNew<vtkRenderer> mRenderer;
 };
 
 #endif // MAINWINDOW_H

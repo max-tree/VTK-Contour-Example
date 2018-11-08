@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-project(VTKExample)
+project(VTKContourExample)
 FIND_PACKAGE(Qt5Widgets)
 FIND_PACKAGE(QT5GUI)
 FIND_PACKAGE(QT5OpenGL)
