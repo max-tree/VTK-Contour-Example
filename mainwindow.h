@@ -18,6 +18,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkContourFilter.h>
 #include <vtkImageData.h>
+#include "myvtkimagesource.h"
 
 namespace Ui {
 class MainWindow;
@@ -37,14 +38,12 @@ protected slots:
     void setup();
     void on_contourSlider_valueChanged(int);
 
-protected:
-    void create_data(vtkImageData *data);
-
 private:
     Ui::MainWindow *ui;
     QVTKOpenGLWidget* mQVtkWidget;
 
     vtkNew<vtkContourFilter> mContourFilter;
+    vtkNew<MyVTKImageSource> mMyVTKImageSourceFilter;
     vtkNew<vtkRenderer> mRenderer;
 };
 

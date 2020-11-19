@@ -1,8 +1,6 @@
 //-------------------------------------------------------
 // Filename: mainwindow.cpp
 //
-// Description:  The cpp file for the qt5 bullet bouncy ball example.
-//
 // Creator:  Professor Corey McBride for MEEN 570 - Brigham Young University
 //
 // Creation Date: 11/8/2018
@@ -60,40 +58,19 @@ void MainWindow::save_data_to_file(vtkImageData* data)
     writer->Write();
 }
 
-void MainWindow::create_data(vtkImageData* data)
-{
-    data->SetExtent(-25,25,-25,25,0,0);
-
-    data->AllocateScalars(VTK_DOUBLE,1);
-
-    int* extent = data->GetExtent();
-
-    for (int y = extent[2]; y <= extent[3]; y++)
-    {
-        for (int x = extent[0]; x <= extent[1]; x++)
-        {
-            double* pixel = static_cast<double*>(data->GetScalarPointer(x,y,0));
-            pixel[0] = sqrt(pow(x,2.0) + pow(y,2.0));
-        }
-    }
-
-    // save_data_to_file(data);
-}
 void MainWindow::setup()
 {
     vtkNew<vtkNamedColors> colors;
 
-    vtkNew<vtkImageData> data;
-    create_data(data);
-
+    mMyVTKImageSourceFilter->Update();
     // Create an isosurface
-    mContourFilter->SetInputData(data);
+    mContourFilter->SetInputData(mMyVTKImageSourceFilter->GetOutput());
     mContourFilter->GenerateValues(1, 10, 10); // (numContours, rangeStart, rangeEnd)
-
 
     // Map the contours to graphical primitives
     vtkNew<vtkPolyDataMapper> contourMapper;
     contourMapper->SetInputConnection(mContourFilter->GetOutputPort());
+    contourMapper->SetScalarRange(0,35);
 
     // Create an actor for the contours
     vtkNew<vtkActor> contourActor;
@@ -103,7 +80,7 @@ void MainWindow::setup()
     // Create the outline
     vtkNew<vtkOutlineFilter> outlineFilter;
 
-    outlineFilter->SetInputData(data);
+    outlineFilter->SetInputData(mMyVTKImageSourceFilter->GetOutput());
 
     vtkNew<vtkPolyDataMapper> outlineMapper;
     outlineMapper->SetInputConnection(outlineFilter->GetOutputPort());
