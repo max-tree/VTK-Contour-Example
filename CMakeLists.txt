@@ -18,6 +18,8 @@ SET(MYSOURCE
     MainWindow.cpp
     MainWindow.h
     MainWindow.ui
+    myvtkimagesource.cpp
+    myvtkimagesource.h
     )
 add_executable(${PROJECT_NAME} 
     ${MYSOURCE}
